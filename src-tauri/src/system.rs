@@ -188,3 +188,212 @@ pub async fn launch_app(app_name: String) -> Result<u32, String> {
         Err("Unsupported platform".to_string())
     }
 }
+
+/// Get list of running processes
+pub async fn get_running_processes() -> Result<Value, String> {
+    let mut sys = System::new_all();
+    sys.refresh_all();
+
+    let mut processes = Vec::new();
+
+    for (pid, process) in sys.processes() {
+        let process_info = ProcessInfo {
+            pid: pid.as_u32(),
+            name: process.name().to_string(),
+            memory_mb: process.memory() as f64 / 1024.0,
+            cpu_percent: process.cpu_usage(),
+        };
+        processes.push(process_info);
+    }
+
+    // Sort by memory usage (descending)
+    processes.sort_by(|a, b| b.memory_mb.partial_cmp(&a.memory_mb).unwrap());
+
+    Ok(serde_json::to_value(processes).unwrap())
+}
+
+/// Get disk usage information
+pub async fn get_disk_info() -> Result<Value, String> {
+    let disks = sysinfo::Disks::new_with_refreshed_list();
+
+    let mut disk_info = Vec::new();
+
+    for disk in disks.list() {
+        let total_gb = disk.total_space() as f64 / 1_000_000_000.0;
+        let available_gb = disk.available_space() as f64 / 1_000_000_000.0;
+        let used_gb = total_gb - available_gb;
+        let percent_used = if total_gb > 0.0 {
+            (used_gb / total_gb) * 100.0
+        } else {
+            0.0
+        };
+
+        disk_info.push(DiskInfo {
+            name: disk.mount_point().display().to_string(),
+            total_gb,
+            used_gb,
+            available_gb,
+            percent_used,
+        });
+    }
+
+    Ok(serde_json::to_value(disk_info).unwrap())
+}
+
+/// Get detailed CPU information
+pub async fn get_cpu_details() -> Result<Value, String> {
+    let mut sys = System::new_all();
+    sys.refresh_all();
+
+    let cpus = sys.cpus();
+    if cpus.is_empty() {
+        return Err("No CPU information available".to_string());
+    }
+
+    let cpu = &cpus[0];
+
+    let cpu_details = CPUDetails {
+        model: cpu.brand().to_string(),
+        cores: sys.cpus().len(),
+        frequency_ghz: cpu.frequency() as f64 / 1000.0,
+    };
+
+    Ok(serde_json::to_value(cpu_details).unwrap())
+}
+
+/// Kill a process by PID
+pub async fn kill_process(pid: u32) -> Result<bool, String> {
+    // Safety check: prevent killing critical system processes
+    let protected_processes = vec!["svchost", "system", "kernel", "aria"];
+
+    let mut sys = System::new_all();
+    sys.refresh_processes(sysinfo::ProcessRefreshKind::everything());
+
+    if let Some(process) = sys.process(sysinfo::Pid::from_u32(pid)) {
+        let process_name = process.name().to_lowercase();
+
+        if protected_processes.iter().any(|&p| process_name.contains(p)) {
+            return Err(format!("Cannot kill protected process: {}", process.name()));
+        }
+
+        // Use platform-specific kill command
+        #[cfg(target_os = "windows")]
+        {
+            match std::process::Command::new("taskkill")
+                .args(&["/PID", &pid.to_string(), "/F"])
+                .output()
+            {
+                Ok(output) => {
+                    if output.status.success() {
+                        Ok(true)
+                    } else {
+                        Err(format!("Failed to kill process: {:?}", String::from_utf8_lossy(&output.stderr)))
+                    }
+                }
+                Err(e) => Err(format!("Error killing process: {}", e)),
+            }
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            match std::process::Command::new("kill")
+                .args(&["-9", &pid.to_string()])
+                .output()
+            {
+                Ok(output) => {
+                    if output.status.success() {
+                        Ok(true)
+                    } else {
+                        Err(format!("Failed to kill process: {:?}", String::from_utf8_lossy(&output.stderr)))
+                    }
+                }
+                Err(e) => Err(format!("Error killing process: {}", e)),
+            }
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            match std::process::Command::new("kill")
+                .args(&["-9", &pid.to_string()])
+                .output()
+            {
+                Ok(output) => {
+                    if output.status.success() {
+                        Ok(true)
+                    } else {
+                        Err(format!("Failed to kill process: {:?}", String::from_utf8_lossy(&output.stderr)))
+                    }
+                }
+                Err(e) => Err(format!("Error killing process: {}", e)),
+            }
+        }
+
+        #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+        {
+            Err("Unsupported platform".to_string())
+        }
+    } else {
+        Err(format!("Process with PID {} not found", pid))
+    }
+}
+
+/// Read a file's contents
+pub async fn read_file(path: String) -> Result<String, String> {
+    let path_obj = Path::new(&path);
+
+    // Security: prevent reading system files
+    let forbidden_paths = vec!["/etc/passwd", "/etc/shadow", "C:\\Windows\\System32\\config"];
+
+    if forbidden_paths.iter().any(|&p| path.contains(p)) {
+        return Err("Access denied: cannot read system files".to_string());
+    }
+
+    match fs::read_to_string(path_obj) {
+        Ok(content) => {
+            if content.len() > 10_000_000 {
+                Err("File too large (max 10MB)".to_string())
+            } else {
+                Ok(content)
+            }
+        }
+        Err(e) => Err(format!("Failed to read file: {}", e)),
+    }
+}
+
+/// Write content to a file
+pub async fn write_file(path: String, content: String) -> Result<bool, String> {
+    let path_obj = Path::new(&path);
+
+    // Create parent directories if needed
+    if let Some(parent) = path_obj.parent() {
+        if !parent.exists() {
+            if let Err(e) = fs::create_dir_all(parent) {
+                return Err(format!("Failed to create directories: {}", e));
+            }
+        }
+    }
+
+    match fs::write(path_obj, content) {
+        Ok(_) => Ok(true),
+        Err(e) => Err(format!("Failed to write file: {}", e)),
+    }
+}
+
+/// Delete a file
+pub async fn delete_file(path: String) -> Result<bool, String> {
+    let path_obj = Path::new(&path);
+
+    // Verify file exists and is a file (not directory)
+    if !path_obj.exists() {
+        return Err(format!("File does not exist: {}", path));
+    }
+
+    if path_obj.is_dir() {
+        return Err("Cannot delete directories with this command".to_string());
+    }
+
+    match fs::remove_file(path_obj) {
+        Ok(_) => Ok(true),
+        Err(e) => Err(format!("Failed to delete file: {}", e)),
+    }
+}
