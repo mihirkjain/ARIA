@@ -55,6 +55,41 @@ async fn invoke_launch_app(app_name: String) -> Result<u32, String> {
 }
 
 #[tauri::command]
+async fn invoke_get_running_processes() -> Result<serde_json::Value, String> {
+    get_running_processes().await
+}
+
+#[tauri::command]
+async fn invoke_get_disk_info() -> Result<serde_json::Value, String> {
+    get_disk_info().await
+}
+
+#[tauri::command]
+async fn invoke_get_cpu_details() -> Result<serde_json::Value, String> {
+    get_cpu_details().await
+}
+
+#[tauri::command]
+async fn invoke_kill_process(pid: u32) -> Result<bool, String> {
+    kill_process(pid).await
+}
+
+#[tauri::command]
+async fn invoke_read_file(path: String) -> Result<String, String> {
+    read_file(path).await
+}
+
+#[tauri::command]
+async fn invoke_write_file(path: String, content: String) -> Result<bool, String> {
+    write_file(path, content).await
+}
+
+#[tauri::command]
+async fn invoke_delete_file(path: String) -> Result<bool, String> {
+    delete_file(path).await
+}
+
+#[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
