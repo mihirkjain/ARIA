@@ -104,6 +104,13 @@ fn main() {
             invoke_get_system_stats,
             invoke_list_directory,
             invoke_launch_app,
+            invoke_get_running_processes,
+            invoke_get_disk_info,
+            invoke_get_cpu_details,
+            invoke_kill_process,
+            invoke_read_file,
+            invoke_write_file,
+            invoke_delete_file,
             greet
         ])
         .run(tauri::generate_context!())
