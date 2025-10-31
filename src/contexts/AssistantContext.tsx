@@ -96,57 +96,100 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('assistantState', JSON.stringify(state));
   }, [state]);
 
-  const generateResponse = async (userMessage: string): Promise<string> => {
-    // Enhanced AI processing with real intelligence and system awareness
+  const generateResponse = async (userMessage: string): Promise<{ text: string; source: string; model: string; latency: number }> => {
+    // Try to use real AI backend if running as Tauri app
+    if (isTauriAvailable()) {
+      try {
+        console.log('Sending message to real AI backend...');
+        const response = await invokeSendChat(userMessage, true, true);
+        return {
+          text: response.response,
+          source: response.source,
+          model: response.model,
+          latency: response.latency_ms,
+        };
+      } catch (error) {
+        console.error('Error calling AI backend:', error);
+        // Fall through to fallback response
+      }
+    }
+
+    // Fallback to simulated response if Tauri not available or backend failed
+    console.warn('Using fallback simulated response');
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-    
+
     const message = userMessage.toLowerCase();
-    
+
     // Identity and self-awareness
     if (message.includes('name') || message.includes('who are you') || message.includes('what are you')) {
-      return "I am ARIA - Advanced Responsive Intelligence Assistant. I'm your personal AI companion designed to help you across all your devices with voice interaction, system monitoring, and intelligent task management.";
+      return {
+        text: "I am ARIA - Advanced Responsive Intelligence Assistant. I'm your personal AI companion designed to help you across all your devices with voice interaction, system monitoring, and intelligent task management.",
+        source: 'local',
+        model: 'fallback',
+        latency: 1000,
+      };
     }
-    
+
     // Greeting responses
     if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
-      return "Hello! I'm ARIA, your advanced AI assistant. I can help you with system monitoring, device management, internet searches, and much more. What would you like me to do?";
+      return {
+        text: "Hello! I'm ARIA, your advanced AI assistant. I can help you with system monitoring, device management, internet searches, and much more. What would you like me to do?",
+        source: 'local',
+        model: 'fallback',
+        latency: 1000,
+      };
     }
-    
+
     // System monitoring queries
     if (message.includes('gpu') || message.includes('system') || message.includes('performance')) {
       const gpuUsage = Math.floor(Math.random() * 100);
       const cpuUsage = Math.floor(Math.random() * 100);
       const ramUsage = Math.floor(Math.random() * 100);
-      return `Current system status:\n• GPU Usage: ${gpuUsage}%\n• CPU Usage: ${cpuUsage}%\n• RAM Usage: ${ramUsage}%\n• Temperature: ${Math.floor(Math.random() * 30 + 45)}°C\n\nAll systems operating within normal parameters.`;
+      return {
+        text: `Current system status:\n• GPU Usage: ${gpuUsage}%\n• CPU Usage: ${cpuUsage}%\n• RAM Usage: ${ramUsage}%\n• Temperature: ${Math.floor(Math.random() * 30 + 45)}°C\n\nAll systems operating within normal parameters.`,
+        source: 'local',
+        model: 'fallback',
+        latency: 1000,
+      };
     }
-    
+
     // Internet connectivity and search
     if (message.includes('google') || message.includes('search') || message.includes('online') || message.includes('internet')) {
-      return "I have access to real-time internet data and can search across multiple platforms. However, in this demo environment, I'm simulating web connectivity. In a full deployment, I would access live APIs for Google Search, Wikipedia, news feeds, and other data sources to provide you with current information.";
+      return {
+        text: "I have access to real-time internet data and can search across multiple platforms. However, in this demo environment, I'm simulating web connectivity. In a full deployment, I would access live APIs for Google Search, Wikipedia, news feeds, and other data sources to provide you with current information.",
+        source: 'local',
+        model: 'fallback',
+        latency: 1000,
+      };
     }
-    
-    // Elon Musk query
-    if (message.includes('elon musk')) {
-      return "Elon Musk is a prominent entrepreneur and business magnate known for:\n• CEO of Tesla (electric vehicles)\n• CEO of SpaceX (aerospace)\n• Owner of X (formerly Twitter)\n• Co-founder of Neuralink (brain-computer interfaces)\n• Founder of The Boring Company (tunnel construction)\n• Co-founder of PayPal\n\nHe's known for his ambitious goals in sustainable energy, space exploration, and advancing human technology. Would you like more specific information about any of his ventures?";
-    }
-    
-    // Device management
-    if (message.includes('device') || message.includes('connect') || message.includes('add device') || message.includes('remove device')) {
-      return "I can help you manage your device ecosystem. Currently monitoring your connected devices with real-time sync capabilities. You can add new devices through the device panel or ask me to scan for nearby devices. Would you like me to scan for new devices or help you configure existing ones?";
-    }
-    
+
     // Capabilities inquiry
     if (message.includes('what can you do') || message.includes('capabilities') || message.includes('features')) {
-      return "I'm ARIA with advanced capabilities:\n• Voice recognition and synthesis\n• Real-time system monitoring (GPU, CPU, RAM)\n• Cross-device synchronization\n• Internet connectivity and search\n• Device management and control\n• Adaptive learning from your preferences\n• Task automation and scheduling\n• File management across devices\n• Smart home integration ready\n• Contextual awareness and memory\n\nWhat specific task would you like help with?";
+      return {
+        text: "I'm ARIA with advanced capabilities:\n• Voice recognition and synthesis\n• Real-time system monitoring (GPU, CPU, RAM)\n• Cross-device synchronization\n• Internet connectivity and search\n• Device management and control\n• Adaptive learning from your preferences\n• Task automation and scheduling\n• File management across devices\n• Smart home integration ready\n• Contextual awareness and memory\n\nWhat specific task would you like help with?",
+        source: 'local',
+        model: 'fallback',
+        latency: 1000,
+      };
     }
-    
+
     // Connection status
     if (message.includes('connected') || message.includes('connection')) {
-      return "Yes, I'm fully connected and operational! I have access to:\n• Your device ecosystem (laptop, tablet, mobile)\n• System monitoring capabilities\n• Internet connectivity for searches\n• Cross-device data synchronization\n• Voice processing systems\n\nAll systems are green and ready for your commands.";
+      return {
+        text: "Yes, I'm fully connected and operational! I have access to:\n• Your device ecosystem (laptop, tablet, mobile)\n• System monitoring capabilities\n• Internet connectivity for searches\n• Cross-device data synchronization\n• Voice processing systems\n\nAll systems are green and ready for your commands.",
+        source: 'local',
+        model: 'fallback',
+        latency: 1000,
+      };
     }
-    
+
     // Default intelligent response
-    return "I understand your request. As ARIA, I'm processing your query with my advanced neural networks. While I have extensive capabilities for system control, device management, and information retrieval, I'm currently running in a demonstration mode. In a full deployment, I would have direct access to system APIs, internet services, and device controls to fulfill your request completely.";
+    return {
+      text: "I understand your request. As ARIA, I'm processing your query with my advanced neural networks. While I have extensive capabilities for system control, device management, and information retrieval, I'm currently running in demonstration mode.",
+      source: 'local',
+      model: 'fallback',
+      latency: 1000,
+    };
   };
 
   const sendMessage = async (text: string) => {
