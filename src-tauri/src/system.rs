@@ -25,6 +25,30 @@ pub struct SystemStats {
     pub os_version: String,
 }
 
+#[derive(serde::Serialize)]
+pub struct ProcessInfo {
+    pub pid: u32,
+    pub name: String,
+    pub memory_mb: f64,
+    pub cpu_percent: f32,
+}
+
+#[derive(serde::Serialize)]
+pub struct DiskInfo {
+    pub name: String,
+    pub total_gb: f64,
+    pub used_gb: f64,
+    pub available_gb: f64,
+    pub percent_used: f64,
+}
+
+#[derive(serde::Serialize)]
+pub struct CPUDetails {
+    pub model: String,
+    pub cores: usize,
+    pub frequency_ghz: f64,
+}
+
 /// Get comprehensive system statistics
 pub async fn get_system_stats(state: &State<AppState>) -> Result<Value, String> {
     let mut sys = System::new_all();
