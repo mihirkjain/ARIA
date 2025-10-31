@@ -1,0 +1,24 @@
+{
+  "build": {
+    "beforeBuildCommand": "",
+    "beforeDevCommand": "",
+    "devPath": "http://localhost:5173",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 900,
+        "resizable": true,
+        "title": "ARIA - AI Assistant",
+        "width": 1400
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "productName": "ARIA",
+  "version": "0.1.0"
+}
