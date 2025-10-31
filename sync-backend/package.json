@@ -1,0 +1,19 @@
+{
+  "name": "aria-sync-backend",
+  "version": "0.1.0",
+  "description": "ARIA Sync Backend - Cross-device synchronization service",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "jsonwebtoken": "^9.1.2",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  }
+}
