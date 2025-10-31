@@ -36,7 +36,7 @@ const ChatInterface: React.FC = () => {
       <div className="flex items-center justify-between p-4 border-b border-slate-700">
         <div>
           <h2 className="text-lg font-semibold text-white">AI Assistant Chat</h2>
-          <p className="text-sm text-slate-400">Your intelligent companion across all devices</p>
+          <p className="text-sm text-slate-400">Powered by local Ollama or cloud AI</p>
         </div>
         <button
           onClick={clearHistory}
