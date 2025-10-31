@@ -74,13 +74,22 @@ const ChatInterface: React.FC = () => {
                 }`}
               >
                 <p className="text-sm leading-relaxed">{message.text}</p>
-                <div className="flex items-center justify-between mt-2 text-xs opacity-70">
+                <div className="flex items-center justify-between mt-2 text-xs opacity-70 flex-wrap gap-2">
                   <span>
                     {message.timestamp.toLocaleTimeString()}
                   </span>
-                  {message.deviceId && (
-                    <span className="ml-2 px-2 py-1 bg-black/20 rounded">
-                      {message.sender === 'user' ? 'You' : 'ARIA'}
+                  {message.sender === 'assistant' && message.source && (
+                    <span className={`px-2 py-1 rounded text-white font-semibold ${
+                      message.source === 'local'
+                        ? 'bg-green-500/30 border border-green-500/50'
+                        : 'bg-orange-500/30 border border-orange-500/50'
+                    }`}>
+                      {message.source === 'local' ? '🟢 Local' : '🟠 Cloud'} ({message.model})
+                    </span>
+                  )}
+                  {message.sender === 'assistant' && message.latency_ms && (
+                    <span className="px-2 py-1 bg-black/30 rounded">
+                      {message.latency_ms.toFixed(0)}ms
                     </span>
                   )}
                 </div>
