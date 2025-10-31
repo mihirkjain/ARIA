@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { invokeSendChat, isTauriAvailable } from '../utils/tauriUtils';
 
 interface Message {
   id: string;
