@@ -7,6 +7,9 @@ interface Message {
   sender: 'user' | 'assistant';
   timestamp: Date;
   deviceId?: string;
+  source?: 'local' | 'cloud';
+  model?: string;
+  latency_ms?: number;
 }
 
 interface AssistantState {
