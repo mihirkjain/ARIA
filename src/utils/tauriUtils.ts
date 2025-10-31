@@ -45,6 +45,27 @@ export interface FileInfo {
   modified: string;
 }
 
+export interface ProcessInfo {
+  pid: number;
+  name: string;
+  memory_mb: number;
+  cpu_percent: number;
+}
+
+export interface DiskInfo {
+  name: string;
+  total_gb: number;
+  used_gb: number;
+  available_gb: number;
+  percent_used: number;
+}
+
+export interface CPUDetails {
+  model: string;
+  cores: number;
+  frequency_ghz: number;
+}
+
 /**
  * Check if Tauri is available (app is running as desktop app)
  */
