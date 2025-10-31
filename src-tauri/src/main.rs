@@ -9,7 +9,10 @@ mod ai;
 mod system;
 
 use ai::{chat_message, get_ai_status, configure_ai};
-use system::{get_system_stats, list_directory, launch_app};
+use system::{
+    get_system_stats, list_directory, launch_app, get_running_processes,
+    get_disk_info, get_cpu_details, kill_process, read_file, write_file, delete_file
+};
 
 #[derive(Default)]
 pub struct AppState {
