@@ -1,0 +1,186 @@
+/**
+ * Tauri Command Wrappers
+ * Provides typed interfaces to invoke Tauri backend commands
+ */
+
+// Type definitions for Tauri command responses
+
+export interface ChatResponse {
+  response: string;
+  source: 'local' | 'cloud';
+  model: string;
+  latency_ms: number;
+}
+
+export interface AIStatus {
+  ollama_running: boolean;
+  available_local_models: string[];
+  cloud_api_available: boolean;
+  cloud_api_type: string;
+  error?: string;
+}
+
+export interface AIPreferences {
+  local_model?: string;
+  cloud_api_type?: string;
+  cloud_api_key?: string;
+  use_local_first?: boolean;
+}
+
+export interface SystemStats {
+  cpu_usage: number;
+  cpu_cores: number;
+  memory_total_gb: number;
+  memory_used_gb: number;
+  memory_available_gb: number;
+  uptime_seconds: number;
+  os_name: string;
+  os_version: string;
+}
+
+export interface FileInfo {
+  name: string;
+  is_dir: boolean;
+  size: number;
+  modified: string;
+}
+
+/**
+ * Check if Tauri is available (app is running as desktop app)
+ */
+export function isTauriAvailable(): boolean {
+  try {
+    // @ts-ignore - Tauri window object
+    return !!window.__TAURI__;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Send chat message to AI backend via Tauri
+ */
+export async function invokeSendChat(
+  message: string,
+  useLocal: boolean = true,
+  fallbackToCloud: boolean = true
+): Promise<ChatResponse> {
+  if (!isTauriAvailable()) {
+    throw new Error('Tauri not available. Make sure you are running as a desktop app.');
+  }
+
+  try {
+    // @ts-ignore - Tauri invoke
+    const response = await window.__TAURI__.invoke<ChatResponse>(
+      'invoke_send_chat',
+      {
+        message,
+        use_local: useLocal,
+        fallback_to_cloud: fallbackToCloud,
+      }
+    );
+    return response;
+  } catch (error) {
+    throw new Error(`Chat failed: ${error}`);
+  }
+}
+
+/**
+ * Get AI services status
+ */
+export async function invokeGetAIStatus(): Promise<AIStatus> {
+  if (!isTauriAvailable()) {
+    throw new Error('Tauri not available');
+  }
+
+  try {
+    // @ts-ignore - Tauri invoke
+    const status = await window.__TAURI__.invoke<AIStatus>(
+      'invoke_get_ai_status'
+    );
+    return status;
+  } catch (error) {
+    throw new Error(`Failed to get AI status: ${error}`);
+  }
+}
+
+/**
+ * Configure AI preferences
+ */
+export async function invokeConfigureAI(
+  preferences: AIPreferences
+): Promise<boolean> {
+  if (!isTauriAvailable()) {
+    throw new Error('Tauri not available');
+  }
+
+  try {
+    // @ts-ignore - Tauri invoke
+    const result = await window.__TAURI__.invoke<boolean>(
+      'invoke_configure_ai',
+      preferences
+    );
+    return result;
+  } catch (error) {
+    throw new Error(`Configuration failed: ${error}`);
+  }
+}
+
+/**
+ * Get system statistics
+ */
+export async function invokeGetSystemStats(): Promise<SystemStats> {
+  if (!isTauriAvailable()) {
+    throw new Error('Tauri not available');
+  }
+
+  try {
+    // @ts-ignore - Tauri invoke
+    const stats = await window.__TAURI__.invoke<SystemStats>(
+      'invoke_get_system_stats'
+    );
+    return stats;
+  } catch (error) {
+    throw new Error(`Failed to get system stats: ${error}`);
+  }
+}
+
+/**
+ * List files in a directory
+ */
+export async function invokeListDirectory(path: string): Promise<FileInfo[]> {
+  if (!isTauriAvailable()) {
+    throw new Error('Tauri not available');
+  }
+
+  try {
+    // @ts-ignore - Tauri invoke
+    const files = await window.__TAURI__.invoke<FileInfo[]>(
+      'invoke_list_directory',
+      { path }
+    );
+    return files;
+  } catch (error) {
+    throw new Error(`Failed to list directory: ${error}`);
+  }
+}
+
+/**
+ * Launch an application
+ */
+export async function invokeLaunchApp(appName: string): Promise<number> {
+  if (!isTauriAvailable()) {
+    throw new Error('Tauri not available');
+  }
+
+  try {
+    // @ts-ignore - Tauri invoke
+    const pid = await window.__TAURI__.invoke<number>(
+      'invoke_launch_app',
+      { app_name: appName }
+    );
+    return pid;
+  } catch (error) {
+    throw new Error(`Failed to launch app: ${error}`);
+  }
+}
