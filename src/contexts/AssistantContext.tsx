@@ -205,20 +205,23 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_PROCESSING', payload: true });
 
     try {
-      const response = await generateResponse(text);
-      
+      const responseData = await generateResponse(text);
+
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: response,
+        text: responseData.text,
         sender: 'assistant',
         timestamp: new Date(),
+        source: responseData.source as 'local' | 'cloud',
+        model: responseData.model,
+        latency_ms: responseData.latency,
       };
 
       dispatch({ type: 'ADD_MESSAGE', payload: assistantMessage });
 
       // Text-to-speech if enabled
       if (state.isVoiceEnabled && 'speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(response);
+        const utterance = new SpeechSynthesisUtterance(responseData.text);
         utterance.rate = 0.9;
         utterance.pitch = 1.1;
         speechSynthesis.speak(utterance);
