@@ -1,0 +1,23 @@
+[package]
+name = "aria"
+version = "0.1.0"
+description = "ARIA - Advanced Intelligent Response Intelligence Assistant"
+authors = [""]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2.9", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+tauri = { version = "2.9", features = ["shell-open"] }
+reqwest = { version = "0.11", features = ["json"] }
+sysinfo = "0.28"
+whoami = "1.4"
+dirs = "5.0"
+
+[features]
+default = [ "custom-protocol" ]
+custom-protocol = [ "tauri/custom-protocol" ]
